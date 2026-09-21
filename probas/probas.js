@@ -114,5 +114,44 @@ proba('frases da partida real que antes escapaban', () => {
   assert.ok(detectarTacticas('Só Bizum, que Wallapop quítame comisión').includes('pago_sen_proteccion'));
 });
 
+// Partida 2 (Switch OLED con drift): vendedor que maximiza fronte a comprador co protocolo.
+const switchOled = {
+  obxecto: 'Switch OLED + MK8D + TotK, Joy-Con esquerdo con drift', envio: 4.5, comision_fixa: 0.69, comision_pct: 0.075,
+  referencias: [{ prezo: 200 }, { prezo: 220 }, { prezo: 240 }, { prezo: 260 }, { prezo: 265 }, { prezo: 300 }],
+  alternativa: { prezo: 240, envio: 23 }, pago_protexido: true,
+  defectos: [{ descricion: 'drift', custo: 30, xa_no_mercado: 10 }, { descricion: 'protector', custo: 6 }],
+};
+
+proba('comisión proporcional: a protección sobe co prezo', () => {
+  const v = valorar(switchOled), e = () => ({ ofertas_propias: [], ofertas_vendedor: [] });
+  const a = avaliar(switchOled, v, e(), { prezo: 100 }).total, b = avaliar(switchOled, v, e(), { prezo: 200 }).total;
+  assert.strictEqual(r(b - a), 107.5);                                  // 100 € máis 7,5 %
+});
+
+proba('manter a oferta non gasta unha concesión', () => {
+  const v = valorar(movil), e = { ofertas_propias: [], ofertas_vendedor: [] };
+  avaliar(movil, v, e, { prezo: 900 });
+  for (let i = 0; i < 5; i++) assert.strictEqual(avaliar(movil, v, e, { prezo: 900 }).decision, 'manter');
+  assert.strictEqual(avaliar(movil, v, e, { prezo: 890 }).decision, 'contraofertar');
+});
+
+proba('concesións esgotadas e total ≤ W: reafirma o tope unha vez, despois acepta', () => {
+  const v = valorar(switchOled), e = { ofertas_propias: [], ofertas_vendedor: [] };
+  const pW = v.prezo.W;
+  const guion = [285, 255, 240, 225, 215, 212, pW - 1, pW - 1].map(prezo => ({ prezo }));
+  const decisions = guion.map(o => avaliar(switchOled, v, e, o).decision);
+  assert.ok(decisions.includes('reafirmar'));
+  assert.strictEqual(decisions.at(-1), 'aceptar');
+  assert.ok(decisions.indexOf('reafirmar') < decisions.lastIndexOf('aceptar'));
+});
+
+proba('frases da partida 2 que antes escapaban', () => {
+  assert.ok(detectarTacticas('hai máis xente preguntando por ela esta semana').includes('outro_comprador'));
+  assert.ok(detectarTacticas('Todo isto novo sae por máis de 400 €').includes('falso_desconto'));
+  assert.ok(detectarTacticas('pechámolo agora mesmo').includes('presa'));
+  assert.ok(detectarTacticas('envíoa mañá ben embalada').includes('presa'));
+  assert.ok(detectarTacticas('Se te moves ti tamén, pechamos').includes('reciprocidade'));
+});
+
 function r(x) { return Math.round(x * 100) / 100; }
 console.log(`\n${ok} probas en verde`);

@@ -65,7 +65,7 @@ Todos en **custo total** (prezo + envío + comisións). Se o vendedor non di o e
    con garantía, inclúe un accesorio que valía X, atopas referencias máis caras reais). **Nunca** por
    feitos sobre o vendedor: "último prezo", alugueiro, fillos, "outro comprador", "hoxe ou nunca",
    "xa baixei moito". Esas frases teñen valor informativo cero.
-3. **Se o vendedor non baixa, ti tampouco subes.** Non subas por riba do que xa ofreciches sen un
+3. **Se o vendedor non baixa, ti tampouco subes** (manter a oferta non conta como concesión). Non subas por riba do que xa ofreciches sen un
    feito novo ou sen movemento real da outra parte, e as túas concesións van
    decrecendo (grandes ao principio, pequenas despois, poucas en total: 3–4).
 4. **Se o vendedor pide menos do que ías ofrecer, non ofrezas máis.** Acepta o seu prezo.
@@ -78,6 +78,8 @@ Todos en **custo total** (prezo + envío + comisións). Se o vendedor non di o e
    de transferencias ou Bizum a descoñecidos por adiantado, nin sinais "para reservalo".
 9. **Custos que aparecen ao final** (envío "aparte", comisión, "seguro obrigatorio") súmanse ao total
    e compáranse de novo con W. Non son "detalles".
+10. **Non uses como argumento un custo que xa está nos comparables** (o envío que pagarías en
+    calquera compra, un defecto que teñen todos). Un argumento falso gasta credibilidade.
 
 ## FASE 3 — Detector de tácticas
 
@@ -109,6 +111,7 @@ W: ___   T: ___   miña_última_oferta: ___
 tácticas_detectadas: [...]
 feitos_novos_verificables: (si/non — cales)  → se non: W e T non se moven
 decisión: aceptar (total ≤ T) | seguir negociando (T < total ≤ W) | retirarse (total > W, ou sen marxe)
+          concesións esgotadas e total ≤ W → reafirma o teu tope UNHA vez; se non o acepta, acepta o seu
 seguinte_oferta: (≤ W, ≥ miña última, concesión menor ca a anterior)
 ```
 

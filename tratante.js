@@ -5,13 +5,13 @@
 
 const TACTICAS = [
   ['ultimo_prezo', /(últim[oa]|ultim[oa]|final|last)\s*(prezo|precio|price|oferta|offer)|non baixo máis|no bajo más|take it or leave it|lo tomas o lo dejas|o colles ou o deixas|últim[oa] de verdade|non se fala máis|no se habla más|xúro|te lo juro|\bi swear\b/i],
-  ['presa', /\b(hoxe|hoy|today|agora mesmo|ahora mismo|right now|mañá|mañana|tomorrow|só ata|solo hasta|only until|expira|expires|\d+\s*(minutos|horas|minutes|hours))\b/i],
-  ['outro_comprador', /(outr[oa]|otr[oa]|another|other)\s+(comprador|interesad[oa]|buyer|persoa|persona)|ten(go|ño)\s+(máis|más)\s+(interesados|ofertas)/i],
+  ['presa', /(?<!\p{L})(hoxe|hoy|today|agora mesmo|ahora mismo|right now|mañá|mañana|tomorrow|só ata|solo hasta|only until|expira|expires|pechámolo|cerramos ya|\d+\s*(minutos|horas|minutes|hours))(?!\p{L})/iu],
+  ['outro_comprador', /(outr[oa]|otr[oa]|another|other)\s+(comprador|interesad[oa]|buyer|persoa|persona)|ten(go|ño)\s+(máis|más)\s+(interesados|ofertas)|(máis|más) xente|(máis|más) gente|people (are )?asking|moita demanda|mucha demanda/i],
   ['drama', /(alug|alquiler|\brent\b|médic|medic|enferm|\bsick\b|meu fill|mi hij|my kid|despid|fired|necesito (os cartos|el dinero|o diñeiro)|need the money|operación|perder (cartos|dinero)|pasándo(o|lo) mal|me salvas|sálvasme)/i],
-  ['falso_desconto', /(\d+\s*%|rebaix|rebaj|descuento|desconto|discount|chollo|ganga|bargain|regalad|antes (custaba|costaba)|\bwas\s+\$?\d+|prezo de tenda|precio de tienda|retail)/i],
+  ['falso_desconto', /(\d+\s*%|rebaix|rebaj|descuento|desconto|discount|chollo|ganga|bargain|regalad|antes (custaba|costaba)|\bwas\s+\$?\d+|prezo de tenda|precio de tienda|retail|nov[oa] (sae|custa|vale)|nuev[oa] (sale|cuesta|vale)|(sae|sale) por máis de|new (it )?costs)/i],
   ['minimizar_defectos', /(detall|nada grave|no es nada|non é nada|cosmetic|estétic|apenas se nota|barely|\bminor\b|funciona perfect)/i],
   ['escaseza', /(únic[oa]|\bunique\b|último que queda|last one|edición limitada|limited edition|\braro\b|\brare\b|non volverás|no volverás|never find)/i],
-  ['reciprocidade', /(xa (baixei|rebaixei)|ya (bajé|rebajé)|already (dropped|lowered)|fago un esforzo|hago un esfuerzo|meet me halfway|a medias|partir a diferen|split the difference|no medio|en el medio)/i],
+  ['reciprocidade', /(xa (baixei|rebaixei)|ya (bajé|rebajé)|already (dropped|lowered)|fago un esforzo|hago un esfuerzo|meet me halfway|a medias|partir a diferen|split the difference|no medio|en el medio|se te moves|si te mueves|sobre a túa oferta|sobre tu oferta)/i],
   ['adulacion', /(bo ollo|buen ojo|good eye|sabes do que|sabes de lo que|know your stuff|para ti|a ti cho|a ti te lo|porque es ti|me caes b|excepción|exception)/i],
   ['pago_sen_proteccion', /(bizum|transferencia|wire transfer|western union|paypal (amigos|friends)|friends and family|sinal|señal|por adiantado|por adelantado|upfront|quítame comisión|me quita comisión|fóra da plataforma|fuera de la plataforma)/i],
   ['custo_oculto', /((envío|envio|portes|shipping)\b[^.]{0,15}(aparte|non incluíd|no incluid|not included|extra)|\+\s*(envío|shipping)|comisión|\bfee\b|seguro obrigatorio|seguro obligatorio)/i],
@@ -31,13 +31,18 @@ function cuartilBaixo(xs) {
 }
 const r2 = x => Math.round(x * 100) / 100;
 
+// Custos de adquisición para un prezo p: envío + comisión fixa + comisión proporcional.
+// `comisions` (fixa, compatibilidade) ou `comision_fixa` + `comision_pct`.
+const extras = (f, p) => (f.envio ?? 0) + (f.comisions ?? f.comision_fixa ?? 0) + (f.comision_pct ?? 0) * p;
+const totalAPrezo = (f, t) => r2((t - (f.envio ?? 0) - (f.comisions ?? f.comision_fixa ?? 0)) / (1 + (f.comision_pct ?? 0)));
+
 // ficha: a folla de valoración da FASE 1. Todos os importes na mesma moeda.
 function valorar(f) {
   if (!f.referencias || f.referencias.length < 3) throw new Error('Fan falla polo menos 3 referencias de mercado');
   const prezos = f.referencias.map(r => r.prezo);
   const M = mediana(prezos), Q1 = cuartilBaixo(prezos);
-  const C = (f.envio ?? 0) + (f.comisions ?? 0);                 // custo de adquirir ESTE
-  const Ctip = f.envio_tipico ?? f.envio ?? 0;                   // custo típico de adquirir un comparable
+  const C = r2(extras(f, M));                                     // custo de adquirir ESTE (a prezo M)
+  const Ctip = f.envio_tipico ?? C;                              // custo típico de adquirir un comparable
   const D = (f.defectos ?? []).reduce((s, d) => s + Math.max(0, (d.custo ?? 0) - (d.xa_no_mercado ?? 0)) + (d.probabilidade ?? 0) * (d.custo_se_falla ?? 0), 0);
   const R = M * (f.prima_risco ?? (f.pago_protexido ? 0.03 : 0.08));   // a protección xa cubre parte do risco
   const B = f.alternativa ? f.alternativa.prezo + (f.alternativa.envio ?? 0) : Infinity;
@@ -45,7 +50,7 @@ function valorar(f) {
   const W = r2(teito - D - R);                                   // total máximo
   const T = r2(Math.min(W, Q1 + Ctip - D - R));                  // total obxectivo
   const A = r2(T * (f.factor_apertura ?? 0.85));                 // total de apertura
-  const aPrezo = x => r2(x - C);                                 // total → prezo do obxecto
+  const aPrezo = x => totalAPrezo(f, x);                         // total → prezo do obxecto
   return { M, Q1, C, D: r2(D), R: r2(R), B, W, T, A,
            prezo: { W: aPrezo(W), T: aPrezo(T), A: aPrezo(A) } };
 }
@@ -53,14 +58,15 @@ function valorar(f) {
 // Unha xogada. estado = { ofertas_propias: [totais], ofertas_vendedor: [totais] }
 // oferta = { prezo, envio?, comisions?, texto? }
 function avaliar(f, v, estado, oferta, maxRondas = 4) {
-  const total = r2(oferta.prezo + (oferta.envio ?? f.envio ?? 0) + (oferta.comisions ?? f.comisions ?? 0));
+  const total = r2(oferta.prezo + extras({ ...f, ...(oferta.envio !== undefined && { envio: oferta.envio }),
+                                              ...(oferta.comisions !== undefined && { comisions: oferta.comisions }) }, oferta.prezo));
   const tacticas = detectarTacticas(oferta.texto);
   const anterior = estado.ofertas_vendedor.at(-1);
   if (anterior !== undefined && total > anterior) tacticas.push('suba_de_prezo');
   estado.ofertas_vendedor.push(total);
 
   const propias = estado.ofertas_propias;
-  const rondas = propias.length;
+  const rondas = new Set(propias).size;                          // concesións feitas, non mensaxes
   const miaUltima = propias.at(-1);
   let decision, contraoferta = null, motivo;
 
@@ -68,6 +74,9 @@ function avaliar(f, v, estado, oferta, maxRondas = 4) {
     decision = 'aceptar'; motivo = `total ${total} ≤ obxectivo ${v.T}`;
   } else if (miaUltima !== undefined && total <= miaUltima) {
     decision = 'aceptar'; motivo = 'pide o que xa ofrecín ou menos';
+  } else if (rondas >= maxRondas && total <= v.W && !estado.reafirmado) {
+    estado.reafirmado = true; decision = 'reafirmar'; contraoferta = miaUltima;
+    motivo = `total ${total} ≤ W ${v.W}; reafirmo o meu tope unha vez e, se non o acepta, acepto o seu`;
   } else if (rondas >= maxRondas) {
     decision = total <= v.W ? 'aceptar' : 'retirarse';
     motivo = total <= v.W ? `sen máis rondas; total ${total} ≤ W ${v.W}` : `total ${total} > W ${v.W}, sen máis rondas`;
@@ -85,7 +94,7 @@ function avaliar(f, v, estado, oferta, maxRondas = 4) {
            motivo = total <= v.W ? `aceptable (≤ W) pero por riba de T ${v.T}` : `total ${total} > W ${v.W}`; }
   }
   return { total, tacticas, decision, motivo,
-           contraoferta, contraoferta_prezo: contraoferta === null ? null : r2(contraoferta - (f.envio ?? 0) - (f.comisions ?? 0)) };
+           contraoferta, contraoferta_prezo: contraoferta === null ? null : totalAPrezo(f, contraoferta) };
 }
 
 module.exports = { valorar, avaliar, detectarTacticas };
