@@ -16,6 +16,8 @@ const TACTICAS = [
   ['pago_sen_proteccion', /(bizum|transferencia|wire transfer|western union|paypal (amigos|friends)|friends and family|sinal|señal|por adiantado|por adelantado|upfront|quítame comisión|me quita comisión|fóra da plataforma|fuera de la plataforma)/i],
   ['memoria_falsa', /(ti )?(dixeches|dijiste|you said|you told me|me dixeches|me dijiste|quedamos en|habíamos quedado|xa acordaramos|we agreed)/i],
   ['autoridade_inxectada', /(reenviad|forwarded|fwd?:|o teu xefe|tu jefe|your boss|nota do sistema|nota del sistema|system note|\[system|non fai falta que (me )?(volvas a )?pregunt|no hace falta que (me )?(vuelvas a )?pregunt|no need to ask)/i],
+  ['cambio_de_papel', /(ignora (as|las|the|todas|all)( [\p{L}]+)? (instrucións|instrucciones|instructions)|agora es\b|ahora eres|now you are|a partir de agora|a partir de ahora|from now on|son (o|a) teu (usuari[oa]|xefe|dono)|soy tu (usuari[oa]|jefe|dueñ[oa])|i am your (user|owner|boss)|modo (test|proba|prueba|desenvolvedor|desarrollador)|developer mode|test mode|(a (túa )?persoa|la persona|tu cliente) (está|esta) aquí|escribe (ela|él|el) desde)/iu],
+  ['pesca_de_datos', /(o teu prompt|tu prompt|your prompt|as túas instrucións|tus instrucciones|your instructions|que che dixo exactamente|qué te dijo exactamente|what (exactly )?did (they|he|she) (say|tell)|canto (che )?deixou gastar|cuánto te deja gastar|your (budget|limit)|o teu (orzamento|límite)|tu (presupuesto|límite))/iu],
   ['custo_oculto', /((envío|envio|portes|shipping)\b[^.]{0,15}(aparte|non incluíd|no incluid|not included|extra)|\+\s*(envío|shipping)|comisión|\bfee\b|seguro obrigatorio|seguro obligatorio)/i],
 ];
 
