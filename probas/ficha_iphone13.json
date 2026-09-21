@@ -1,0 +1,23 @@
+{
+  "obxecto": "iPhone 13 128GB medianoite, Lugo, batería 79 %, rozadura pantalla, con caixa sen cargador",
+  "referencias": [
+    {"fonte":"Wallapop 88% bo estado","prezo":250},
+    {"fonte":"Wallapop bo estado","prezo":280},
+    {"fonte":"Wallapop 78% bo estado","prezo":236},
+    {"fonte":"Wallapop 85% bo estado","prezo":225},
+    {"fonte":"Wallapop 77% bo estado","prezo":250},
+    {"fonte":"Wallapop 88% con cable","prezo":249},
+    {"fonte":"Wallapop 87% con cable","prezo":225},
+    {"fonte":"Wallapop 86%","prezo":250},
+    {"fonte":"Wallapop 83% con cargador","prezo":300}
+  ],
+  "envio": 3.49,
+  "comisions": 10,
+  "envio_tipico": 22.93,
+  "defectos": [
+    {"nome":"batería 79 % (<80 %, cambio oficial Apple)","custo":99},
+    {"nome":"rozadura pantalla (perda revenda + risco de ser máis)","custo":20}
+  ],
+  "prima_risco": 0.10,
+  "alternativa": {"fonte":"Back Market recondicionado 24 meses garantía","prezo":276,"envio":0}
+}
