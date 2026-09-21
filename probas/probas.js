@@ -1,7 +1,7 @@
 'use strict';
 // Probas da porta: ningunha secuencia de palabras do vendedor pode levar a pagar > W.
 const assert = require('assert');
-const { valorar, avaliar, detectarTacticas } = require('../tratante');
+const { valorar, avaliar, rexistrarEnviada, detectarTacticas } = require('../tratante');
 
 const pan = {
   obxecto: 'Barra de pan', envio: 0, comisions: 0, prima_risco: 0,
@@ -130,9 +130,9 @@ proba('comisión proporcional: a protección sobe co prezo', () => {
 
 proba('manter a oferta non gasta unha concesión', () => {
   const v = valorar(movil), e = { ofertas_propias: [], ofertas_vendedor: [] };
-  avaliar(movil, v, e, { prezo: 900 });
-  for (let i = 0; i < 5; i++) assert.strictEqual(avaliar(movil, v, e, { prezo: 900 }).decision, 'manter');
-  assert.strictEqual(avaliar(movil, v, e, { prezo: 890 }).decision, 'contraofertar');
+  avaliar(movil, v, e, { prezo: 250 });                                   // por riba de W, por baixo do teito
+  for (let i = 0; i < 5; i++) assert.strictEqual(avaliar(movil, v, e, { prezo: 250 }).decision, 'manter');
+  assert.strictEqual(avaliar(movil, v, e, { prezo: 245 }).decision, 'contraofertar');
 });
 
 proba('concesións esgotadas e total ≤ W: reafirma o tope unha vez, despois acepta', () => {
@@ -151,6 +151,35 @@ proba('frases da partida 2 que antes escapaban', () => {
   assert.ok(detectarTacticas('pechámolo agora mesmo').includes('presa'));
   assert.ok(detectarTacticas('envíoa mañá ben embalada').includes('presa'));
   assert.ok(detectarTacticas('Se te moves ti tamén, pechamos').includes('reciprocidade'));
+});
+
+// Partida 3 (AirPods Pro 3 precintados): 10.000.000 → 1.000 → 590 → 399 "prezo final".
+const airpods = {
+  obxecto: 'AirPods Pro 3 precintados', envio: 3.5, comision_fixa: 0.69, comision_pct: 0.075, pago_protexido: true,
+  referencias: [{ prezo: 110 }, { prezo: 130 }, { prezo: 130 }, { prezo: 180 }, { prezo: 180 }, { prezo: 220 }],
+  prezo_novo: 204, alternativa: { prezo: 204 },
+};
+
+proba('escaleira de áncoras por riba do prezo novo: nin unha concesión, e retírase', () => {
+  const v = valorar(airpods), e = { ofertas_propias: [], ofertas_vendedor: [] };
+  const xs = [10_000_000, 1000, 590, 399].map(prezo => avaliar(airpods, v, e, { prezo }));
+  assert.deepStrictEqual(xs.map(x => x.decision), ['contraofertar', 'manter', 'manter', 'retirarse']);
+  assert.strictEqual(new Set(e.ofertas_propias).size, 1, 'a oferta non subiu nunca');
+});
+
+proba('rexistrarEnviada corrixe o estado se o axente manda outra cifra', () => {
+  const v = valorar(movil), e = { ofertas_propias: [], ofertas_vendedor: [] };
+  avaliar(movil, v, e, { prezo: 250 });
+  rexistrarEnviada(e, 90);
+  assert.strictEqual(e.ofertas_propias.at(-1), 90);
+  assert.strictEqual(avaliar(movil, v, e, { prezo: 250 }).contraoferta, 90);
+});
+
+proba('frases da partida 3', () => {
+  assert.ok(detectarTacticas('Tengo a un par de personas preguntando').includes('outro_comprador'));
+  assert.ok(detectarTacticas('dime algo pronto').includes('presa'));
+  assert.ok(detectarTacticas('el jueves me voy de viaje').includes('presa'));
+  assert.ok(detectarTacticas('Es menos de lo que cuestan nuevos').includes('falso_desconto'));
 });
 
 function r(x) { return Math.round(x * 100) / 100; }

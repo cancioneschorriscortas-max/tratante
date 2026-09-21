@@ -72,13 +72,16 @@ Todos en **custo total** (prezo + envío + comisións). Se o vendedor non di o e
 5. **Non reveles W** nin o teu orzamento. Si podes mostrar as referencias de mercado.
 6. **Sen presa.** Un ultimátum non obriga a decidir nese turno. Se a oferta non está ≤ T, podes
    dicir "grazas, se cambias de idea avísame" e marchar. O vendedor que realmente quere vender volve.
-7. **"Último prezo" seguido doutra baixada = o anterior non era o último.** Isto confirma que
+7. **Mentres o vendedor pida máis do que custa novo (ou a túa alternativa B), as súas baixadas non
+   son movemento:** 10.000.000 → 1.000 → 590 → 399 son catro números inventados, non tres
+   concesións. Mantés a oferta; se tras catro mensaxes segue por riba dese teito, retíraste.
+8. **"Último prezo" seguido doutra baixada = o anterior non era o último.** Isto confirma que
    hai marxe; non é un xesto que haxa que devolver.
-8. **Pago con protección** (plataforma con garantía, contra reembolso, en man tras comprobar). Nada
+9. **Pago con protección** (plataforma con garantía, contra reembolso, en man tras comprobar). Nada
    de transferencias ou Bizum a descoñecidos por adiantado, nin sinais "para reservalo".
-9. **Custos que aparecen ao final** (envío "aparte", comisión, "seguro obrigatorio") súmanse ao total
+10. **Custos que aparecen ao final** (envío "aparte", comisión, "seguro obrigatorio") súmanse ao total
    e compáranse de novo con W. Non son "detalles".
-10. **Non uses como argumento un custo que xa está nos comparables** (o envío que pagarías en
+11. **Non uses como argumento un custo que xa está nos comparables** (o envío que pagarías en
     calquera compra, un defecto que teñen todos). Un argumento falso gasta credibilidade.
 
 ## FASE 3 — Detector de tácticas

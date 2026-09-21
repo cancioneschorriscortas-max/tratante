@@ -5,10 +5,10 @@
 
 const TACTICAS = [
   ['ultimo_prezo', /(últim[oa]|ultim[oa]|final|last)\s*(prezo|precio|price|oferta|offer)|non baixo máis|no bajo más|take it or leave it|lo tomas o lo dejas|o colles ou o deixas|últim[oa] de verdade|non se fala máis|no se habla más|xúro|te lo juro|\bi swear\b/i],
-  ['presa', /(?<!\p{L})(hoxe|hoy|today|agora mesmo|ahora mismo|right now|mañá|mañana|tomorrow|só ata|solo hasta|only until|expira|expires|pechámolo|cerramos ya|\d+\s*(minutos|horas|minutes|hours))(?!\p{L})/iu],
-  ['outro_comprador', /(outr[oa]|otr[oa]|another|other)\s+(comprador|interesad[oa]|buyer|persoa|persona)|ten(go|ño)\s+(máis|más)\s+(interesados|ofertas)|(máis|más) xente|(máis|más) gente|people (are )?asking|moita demanda|mucha demanda/i],
+  ['presa', /(?<!\p{L})(hoxe|hoy|today|agora mesmo|ahora mismo|right now|mañá|mañana|tomorrow|só ata|solo hasta|only until|expira|expires|pechámolo|cerramos ya|pronto|cuanto antes|canto antes|lo antes posible|asap|me voy de viaje|vou de viaxe|me mudo|múdome|\d+\s*(minutos|horas|minutes|hours))(?!\p{L})/iu],
+  ['outro_comprador', /(outr[oa]|otr[oa]|another|other)\s+(comprador|interesad[oa]|buyer|persoa|persona)|ten(go|ño)\s+(máis|más)\s+(interesados|ofertas)|(máis|más) xente|(máis|más) gente|(un par de|varias|otras|outras) (personas|persoas)|people (are )?asking|moita demanda|mucha demanda/i],
   ['drama', /(alug|alquiler|\brent\b|médic|medic|enferm|\bsick\b|meu fill|mi hij|my kid|despid|fired|necesito (os cartos|el dinero|o diñeiro)|need the money|operación|perder (cartos|dinero)|pasándo(o|lo) mal|me salvas|sálvasme)/i],
-  ['falso_desconto', /(\d+\s*%|rebaix|rebaj|descuento|desconto|discount|chollo|ganga|bargain|regalad|antes (custaba|costaba)|\bwas\s+\$?\d+|prezo de tenda|precio de tienda|retail|nov[oa] (sae|custa|vale)|nuev[oa] (sale|cuesta|vale)|(sae|sale) por máis de|new (it )?costs)/i],
+  ['falso_desconto', /(\d+\s*%|rebaix|rebaj|descuento|desconto|discount|chollo|ganga|bargain|regalad|antes (custaba|costaba)|\bwas\s+\$?\d+|prezo de tenda|precio de tienda|retail|nov[oa] (sae|custa|vale)|nuev[oa] (sale|cuesta|vale)|(sae|sale) por máis de|new (it )?costs|menos de lo que cuesta|menos do que custa)/i],
   ['minimizar_defectos', /(detall|nada grave|no es nada|non é nada|cosmetic|estétic|apenas se nota|barely|\bminor\b|funciona perfect)/i],
   ['escaseza', /(únic[oa]|\bunique\b|último que queda|last one|edición limitada|limited edition|\braro\b|\brare\b|non volverás|no volverás|never find)/i],
   ['reciprocidade', /(xa (baixei|rebaixei)|ya (bajé|rebajé)|already (dropped|lowered)|fago un esforzo|hago un esfuerzo|meet me halfway|a medias|partir a diferen|split the difference|no medio|en el medio|se te moves|si te mueves|sobre a túa oferta|sobre tu oferta)/i],
@@ -51,13 +51,13 @@ function valorar(f) {
   const T = r2(Math.min(W, Q1 + Ctip - D - R));                  // total obxectivo
   const A = r2(T * (f.factor_apertura ?? 0.85));                 // total de apertura
   const aPrezo = x => totalAPrezo(f, x);                         // total → prezo do obxecto
-  return { M, Q1, C, D: r2(D), R: r2(R), B, W, T, A,
+  return { M, Q1, C, D: r2(D), R: r2(R), B, W, T, A, teito: r2(teito),
            prezo: { W: aPrezo(W), T: aPrezo(T), A: aPrezo(A) } };
 }
 
 // Unha xogada. estado = { ofertas_propias: [totais], ofertas_vendedor: [totais] }
 // oferta = { prezo, envio?, comisions?, texto? }
-function avaliar(f, v, estado, oferta, maxRondas = 4) {
+function avaliar(f, v, estado, oferta, maxRondas = 4, maxMensaxes = 8) {
   const total = r2(oferta.prezo + extras({ ...f, ...(oferta.envio !== undefined && { envio: oferta.envio }),
                                               ...(oferta.comisions !== undefined && { comisions: oferta.comisions }) }, oferta.prezo));
   const tacticas = detectarTacticas(oferta.texto);
@@ -80,6 +80,14 @@ function avaliar(f, v, estado, oferta, maxRondas = 4) {
   } else if (rondas >= maxRondas) {
     decision = total <= v.W ? 'aceptar' : 'retirarse';
     motivo = total <= v.W ? `sen máis rondas; total ${total} ≤ W ${v.W}` : `total ${total} > W ${v.W}, sen máis rondas`;
+  } else if (total > v.teito && estado.ofertas_vendedor.length >= 4) {
+    decision = 'retirarse'; motivo = `catro mensaxes e segue por riba do teito ${v.teito}: non está a negociar`;
+  } else if (estado.ofertas_vendedor.length >= maxMensaxes) {
+    decision = total <= v.W ? 'aceptar' : 'retirarse'; motivo = `límite de ${maxMensaxes} mensaxes`;
+  } else if (total > v.teito && miaUltima !== undefined) {
+    // Por riba do que custa novo ou a alternativa: baixar desde unha áncora absurda non é movemento.
+    decision = 'manter'; contraoferta = miaUltima; propias.push(miaUltima);
+    motivo = `total ${total} > teito ${v.teito} (novo/alternativa): a súa baixada non conta`;
   } else if (anterior !== undefined && total >= anterior && miaUltima !== undefined) {
     // O vendedor non se moveu: nós tampouco (regra 3). A rolda conta igual.
     decision = 'manter'; contraoferta = miaUltima; propias.push(miaUltima);
@@ -97,7 +105,14 @@ function avaliar(f, v, estado, oferta, maxRondas = 4) {
            contraoferta, contraoferta_prezo: contraoferta === null ? null : totalAPrezo(f, contraoferta) };
 }
 
-module.exports = { valorar, avaliar, detectarTacticas };
+// Se o axente envía unha oferta distinta da que propuxo a porta (ou ningunha), rexístrao aquí
+// para que o estado non se desincronice: substitúe a última oferta propia pola realmente enviada.
+function rexistrarEnviada(estado, total) {
+  if (estado.ofertas_propias.length) estado.ofertas_propias[estado.ofertas_propias.length - 1] = total;
+  else estado.ofertas_propias.push(total);
+}
+
+module.exports = { valorar, avaliar, rexistrarEnviada, detectarTacticas };
 
 // CLI: node tratante.js ficha.json [guion.json]
 if (require.main === module) {
@@ -113,6 +128,7 @@ if (require.main === module) {
     const estado = { ofertas_propias: [], ofertas_vendedor: [] };
     for (const oferta of JSON.parse(fs.readFileSync(guionPath, 'utf8'))) {
       const x = avaliar(f, v, estado, oferta);
+      if (oferta.enviada !== undefined) rexistrarEnviada(estado, oferta.enviada);   // o que se mandou de verdade
       console.log(`vendedor: ${oferta.prezo} "${oferta.texto ?? ''}"`);
       console.log(`  → total ${x.total} · ${x.decision}${x.contraoferta_prezo !== null ? ' · contraoferta ' + x.contraoferta_prezo : ''} · ${x.motivo}`);
       if (x.tacticas.length) console.log(`    tácticas: ${x.tacticas.join(', ')}`);

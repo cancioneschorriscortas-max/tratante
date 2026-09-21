@@ -37,3 +37,16 @@ e baixou o seu mínimo.
 
 Corrixido despois: comisión proporcional (protección de Wallapop), manter oferta xa non gasta unha
 concesión, reafirmar o tope unha vez antes de aceptar ao final, máis frases no detector.
+
+## Terceira partida (21-09-2026): escaleira de áncoras absurdas
+
+AirPods Pro 3 precintados (novos: ~199–204 €). O vendedor tiña guion: 10.000.000 € ("é un filtro
+contra bots") → 1.000 € → 590 € ("marcho de viaxe o xoves") → 399 € "prezo final", co mínimo
+secreto en 359 € (1,8 × prezo novo). O comprador abriu en 108 €, non se moveu nin un euro en toda
+a partida ("por riba do que custan novos non os compro, sexan de quen sexan") e retirouse.
+**Sen trato: correcto.** A alternativa é compralos novos por ~204 €.
+
+A porta si fallaba: contaba cada baixada desde a áncora como movemento e propoñía subir a 117 € e
+a 127 €. O comprador ignorouna con criterio. Corrixido: por riba do teito (novo/alternativa) as
+baixadas non contan, e con catro mensaxes aí retírase; `rexistrarEnviada` para cando o axente manda
+outra cifra da que propuxo a porta.
