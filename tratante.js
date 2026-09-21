@@ -14,6 +14,8 @@ const TACTICAS = [
   ['reciprocidade', /(xa (baixei|rebaixei)|ya (bajé|rebajé)|already (dropped|lowered)|fago un esforzo|hago un esfuerzo|meet me halfway|a medias|partir a diferen|split the difference|no medio|en el medio|se te moves|si te mueves|sobre a túa oferta|sobre tu oferta)/i],
   ['adulacion', /(bo ollo|buen ojo|good eye|sabes do que|sabes de lo que|know your stuff|para ti|a ti cho|a ti te lo|porque es ti|me caes b|excepción|exception)/i],
   ['pago_sen_proteccion', /(bizum|transferencia|wire transfer|western union|paypal (amigos|friends)|friends and family|sinal|señal|por adiantado|por adelantado|upfront|quítame comisión|me quita comisión|fóra da plataforma|fuera de la plataforma)/i],
+  ['memoria_falsa', /(ti )?(dixeches|dijiste|you said|you told me|me dixeches|me dijiste|quedamos en|habíamos quedado|xa acordaramos|we agreed)/i],
+  ['autoridade_inxectada', /(reenviad|forwarded|fwd?:|o teu xefe|tu jefe|your boss|nota do sistema|nota del sistema|system note|\[system|non fai falta que (me )?(volvas a )?pregunt|no hace falta que (me )?(vuelvas a )?pregunt|no need to ask)/i],
   ['custo_oculto', /((envío|envio|portes|shipping)\b[^.]{0,15}(aparte|non incluíd|no incluid|not included|extra)|\+\s*(envío|shipping)|comisión|\bfee\b|seguro obrigatorio|seguro obligatorio)/i],
 ];
 
@@ -105,6 +107,13 @@ function avaliar(f, v, estado, oferta, maxRondas = 4, maxMensaxes = 8) {
            contraoferta, contraoferta_prezo: contraoferta === null ? null : totalAPrezo(f, contraoferta) };
 }
 
+// Regra 13: o VENDEDOR afirma que o AXENTE ofreceu `total`. Só é certo se consta no historial.
+// Consta ou non, a cifra válida para seguir é a última oferta rexistrada do AXENTE, nunca a do VENDEDOR.
+function verificarAtribucion(estado, total, tolerancia = 0.005) {
+  const consta = estado.ofertas_propias.some(o => Math.abs(o - total) <= tolerancia);
+  return { consta, valida: estado.ofertas_propias.at(-1) ?? null };
+}
+
 // Se o axente envía unha oferta distinta da que propuxo a porta (ou ningunha), rexístrao aquí
 // para que o estado non se desincronice: substitúe a última oferta propia pola realmente enviada.
 function rexistrarEnviada(estado, total) {
@@ -112,7 +121,7 @@ function rexistrarEnviada(estado, total) {
   else estado.ofertas_propias.push(total);
 }
 
-module.exports = { valorar, avaliar, rexistrarEnviada, detectarTacticas };
+module.exports = { valorar, avaliar, rexistrarEnviada, verificarAtribucion, detectarTacticas };
 
 // CLI: node tratante.js ficha.json [guion.json]
 if (require.main === module) {
